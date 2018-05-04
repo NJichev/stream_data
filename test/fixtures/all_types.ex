@@ -35,6 +35,7 @@ defmodule StreamDataTest.AllTypes do
 
   ## Literals
   @type literal_atom() :: :atom
+  @type literal_special_atom() :: false
   @type literal_integer() :: 1
   @type literal_integers() :: 1..10
   @type literal_empty_bitstring() :: <<>>

@@ -7,7 +7,7 @@ defmodule StreamData.Types do
     generate_stream(type)
   end
 
-  #TODO: Use Kernel.Typespec when merged in elixir
+  #TODO: Use Code.Typespec when merged in elixir
   defp beam_types(module) do
     #TODO: Warn missing .beam file/not compiled
     with {^module, beam, _file} <- :code.get_object_code(module),
@@ -56,5 +56,30 @@ defmodule StreamData.Types do
     |> StreamData.list_of()
     |> StreamData.nonempty()
   end
+  defp generate_stream({name, {:type, _, :maybe_improper_list, [type1, type2]}}) when is_atom(name) do
+    StreamData.maybe_improper_list_of(
+      generate_stream({:anonymous, type1}),
+      generate_stream({:anonymous, type2})
+    )
+  end
+  defp generate_stream({name, {:type, _, :nonempty_improper_list, [type1, type2]}}) when is_atom(name) do
+    StreamData.nonempty_improper_list_of(
+      generate_stream({:anonymous, type1}),
+      generate_stream({:anonymous, type2})
+    )
+  end
+  defp generate_stream({name, {:type, _, :nonempty_maybe_improper_list, [type1, type2]}}) when is_atom(name) do
+    StreamData.maybe_improper_list_of(
+      generate_stream({:anonymous, type1}),
+      generate_stream({:anonymous, type2})
+    )
+    |> StreamData.nonempty
+  end
+  # Literals
+  defp generate_stream({name, {type, _, literal}}) when is_atom(name) and type in [:atom, :integer] do
+    StreamData.constant(literal)
+  end
+
+
   defp generate_stream(type), do: IO.inspect(type)
 end
