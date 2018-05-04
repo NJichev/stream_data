@@ -9,6 +9,7 @@ defmodule StreamData.Mixfile do
       app: :stream_data,
       version: @version,
       elixir: "~> 1.5",
+      elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
 
@@ -47,4 +48,7 @@ defmodule StreamData.Mixfile do
       {:ex_doc, "~> 0.15", only: :dev}
     ]
   end
+
+  defp elixirc_paths(:test), do: ["lib", "test/fixtures"]
+  defp elixirc_paths(_), do: ["lib"]
 end

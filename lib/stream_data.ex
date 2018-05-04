@@ -1447,6 +1447,47 @@ defmodule StreamData do
   end
 
   @doc """
+  Generates non negative integers bound by the generation size.
+
+  ## Examples
+
+      Enum.take(StreamData.positive_integer(), 3)
+      #=> [0, 1, 3]
+
+  ## Shrinking
+
+  Generated values shrink towards `0`.
+  """
+  @spec non_negative_integer() :: t(non_neg_integer())
+  def non_negative_integer() do
+    new(fn seed, size ->
+      {init, _next_seed} = uniform_in_range(0, size, seed)
+      integer_lazy_tree(init, 0, size)
+    end)
+  end
+
+  @doc """
+  Generates negative integers bound by the generation size.
+
+  ## Examples
+
+      Enum.take(StreamData.negative_integer(), 3)
+      #=> [-1, -1, -3]
+
+  ## Shrinking
+
+  Generated values shrink towards `-1`.
+  """
+  @spec negative_integer() :: t(neg_integer())
+  def negative_integer() do
+    new(fn seed, size ->
+      {init, _next_seed} = uniform_in_range(-size, -1, seed)
+      integer_lazy_tree(init, -1, -size)
+    end)
+  end
+
+
+  @doc """
   Generates floats according to the given `options`.
 
   The complexity of the generated floats grows proportionally to the generation size.
@@ -1831,6 +1872,24 @@ defmodule StreamData do
   end
 
   @doc """
+  Generates references.
+
+  References an almost unique identifier for objects. Generally used to associate messages to the request.
+
+  ## Examples
+
+      Enum.take(StreamData.reference(), 1)
+      #=> [#Reference<0.1249135669.3322937346.100334>]
+
+  ## Shrinking
+
+  References do not shrink.
+  """
+  def reference() do
+    new(fn _seed, _size -> lazy_tree_constant(make_ref()) end)
+  end
+
+  @doc """
   Generates any term.
 
   The terms that this generator can generate are simple terms or compound terms. The simple terms
@@ -1841,7 +1900,7 @@ defmodule StreamData do
     * floats (through `float/0`)
     * booleans (through `boolean/0`)
     * atoms (through `atom/1`)
-    * references (which are not shrinkable)
+    * references (through `reference/0`)
 
   Compound terms are terms that contain other terms (which are generated recursively with
   `term/0`):
@@ -1863,8 +1922,7 @@ defmodule StreamData do
   @spec term() :: t(simple | [simple] | %{optional(simple) => simple} | tuple())
         when simple: boolean() | integer() | binary() | float() | atom() | reference()
   def term() do
-    ref = new(fn _seed, _size -> lazy_tree_constant(make_ref()) end)
-    simple_term = one_of([boolean(), integer(), binary(), float(), atom(:alphanumeric), ref])
+    simple_term = one_of([boolean(), integer(), binary(), float(), atom(:alphanumeric), reference()])
 
     tree(simple_term, fn leaf ->
       one_of([list_of(leaf), map_of(leaf, leaf), one_to_four_element_tuple(leaf)])

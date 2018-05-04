@@ -225,7 +225,21 @@ defmodule StreamDataTest do
   property "positive_integer/0" do
     check all int <- positive_integer() do
       assert is_integer(int)
-      assert int in 1..1000
+      assert int > 0
+    end
+  end
+
+  property "negative_integer/0" do
+    check all int <- negative_integer() do
+      assert is_integer(int)
+      assert int < 0
+    end
+  end
+
+  property "non_negative_integer/0" do
+    check all int <- non_negative_integer() do
+      assert is_integer(int)
+      assert int >= 0
     end
   end
 
@@ -567,6 +581,12 @@ defmodule StreamDataTest do
   property "iodata/0" do
     check all iodata <- iodata(), max_runs: 50 do
       assert IO.iodata_length(iodata) >= 0
+    end
+  end
+
+  property "reference/0" do
+    check all ref <- reference(), max_runs: 50 do
+      assert is_reference(ref)
     end
   end
 
