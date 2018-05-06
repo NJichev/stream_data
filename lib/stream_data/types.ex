@@ -107,6 +107,9 @@ defmodule StreamData.Types do
   defp generate_stream({:type, _, :binary, []}) do
     StreamData.binary()
   end
+  defp generate_stream({:type, _, :map, :any}) do
+    StreamData.map_of(StreamData.term(), StreamData.term())
+  end
 
   defp generate_stream(type), do: IO.inspect(type)
 end

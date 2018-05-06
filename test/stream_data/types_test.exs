@@ -28,7 +28,14 @@ defmodule StreamData.TypesTest do
     check all x <- data, do: assert is_atom(x)
   end
 
-  test "map"
+  test "map" do
+    data = generate_data(:basic_map)
+
+    check all x <- data, max_runs: 25 do
+      assert is_map(x)
+    end
+  end
+
   test "pid"
   test "port"
 
@@ -38,12 +45,20 @@ defmodule StreamData.TypesTest do
     check all x <- data, do: assert is_reference(x)
   end
 
-  test "struct"
+  test "struct" do
+    data = generate_data(:basic_struct)
+
+    check all x <- data, max_runs: 25 do
+      assert is_map(x)
+    end
+  end
 
   test "tuple" do
     data = generate_data(:basic_tuple)
 
-    check all x <- data, max_runs: 25, do: assert is_tuple(x)
+    check all x <- data, max_runs: 25 do
+      assert is_tuple(x)
+    end
   end
 
   # Numbers
