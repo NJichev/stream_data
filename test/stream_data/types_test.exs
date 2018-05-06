@@ -47,10 +47,6 @@ defmodule StreamData.TypesTest do
 
   test "struct" do
     data = generate_data(:basic_struct)
-
-    check all x <- data, max_runs: 25 do
-      assert is_map(x)
-    end
   end
 
   test "tuple" do
@@ -246,6 +242,8 @@ defmodule StreamData.TypesTest do
       end
     end
 
+    test "functions"
+
     test "list type" do
       data = generate_data(:literal_list_type)
 
@@ -309,10 +307,93 @@ defmodule StreamData.TypesTest do
       end
     end
 
-    test "functions"
+    test "empty map" do
+      data = generate_data(:literal_empty_map)
+
+      check all x <- data do
+        assert x == %{}
+      end
+    end
+
+    test "map with fixed key" do
+      data = generate_data(:literal_map_with_key)
+
+      check all x <- data, max_runs: 25 do
+        %{key: int} = x
+        assert is_map(x)
+        assert is_integer(int)
+      end
+    end
+
+    test "map with optional key" do
+      data = generate_data(:literal_map_with_optional_key)
+
+      check all x <- data, max_runs: 25 do
+        assert is_map(x)
+
+        assert Map.keys(x) |> Enum.all?(fn k -> is_bitstring(k) end)
+        assert Map.values(x) |> Enum.all?(fn v -> is_integer(v) end)
+      end
+    end
+
+    test "map with required keys" do
+      data = generate_data(:literal_map_with_required_key)
+
+      check all x <- data, max_runs: 25 do
+        assert is_map(x)
+        assert x != %{}
+
+        assert Map.keys(x) |> Enum.all?(fn k -> is_bitstring(k) end)
+        assert Map.values(x) |> Enum.all?(fn v -> is_integer(v) end)
+      end
+    end
+
+    test "map with required and optional key" do
+      data = generate_data(:literal_map_with_required_and_optional_key)
+
+      check all x <- data, max_runs: 25 do
+        assert is_map(x)
+
+        %{key: int} = x
+        map = Map.delete(x, :key)
+        assert is_integer(int)
+
+        assert Map.keys(map) |> Enum.all?(fn k -> is_bitstring(k) end)
+        assert Map.values(map) |> Enum.all?(fn v -> is_integer(v) end)
+      end
+    end
+
+    test "struct with all fields any type" do
+      data = generate_data(:literal_struct_all_fields_any_type)
+
+      check all x <- data, max_runs: 25 do
+        assert %StreamDataTest.AllTypes.SomeStruct{key: _value} = x
+      end
+    end
+
+    test "struct with all fields key type" do
+      data = generate_data(:literal_struct_all_fields_key_type)
+
+      check all x <- data, max_runs: 25 do
+        assert %StreamDataTest.AllTypes.SomeStruct{key: value} = x
+        assert is_integer(value)
+      end
+    end
+
+    test "empty tuple" do
+      data = generate_data(:literal_empty_tuple)
+
+      check all x <- data, do: assert x == {}
+    end
+
+    test "2 element tuple with fixed and random type" do
+      data = generate_data(:literal_2_element_tuple)
+
+      check all {1, x} <- data, do: assert is_atom(x)
+    end
   end
 
-  #TODO: Delete if merge types file and test file to stream_data.ex
+  #TODO: Delete if whole file is moved to stream_data.ex
   defp each_improper_list([], _head_fun, _tail_fun) do
     :ok
   end

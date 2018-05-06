@@ -87,6 +87,9 @@ defmodule StreamData.Types do
     #Not sure this is right
     StreamData.bitstring(length: size * unit)
   end
+  defp generate_stream({:type, _, :bitstring, []}) do
+    StreamData.bitstring
+  end
   defp generate_stream({:type, _, nil, []}), do: StreamData.constant([])
   defp generate_stream({:type, _, :nonempty_list, []}) do
     StreamData.term()
@@ -110,6 +113,40 @@ defmodule StreamData.Types do
   defp generate_stream({:type, _, :map, :any}) do
     StreamData.map_of(StreamData.term(), StreamData.term())
   end
+  defp generate_stream({:type, _, :map, []}) do
+    StreamData.constant(%{})
+  end
+  defp generate_stream({:type, _, :map, field_types}) do
+    field_types
+    |> Enum.map(&generate_map_field/1)
+    |> Enum.reduce(fn x, acc ->
+      StreamData.bind(acc, fn map1 ->
+        StreamData.bind(x, fn map2 ->
+          Map.merge(map2, map1)
+          |> StreamData.constant
+        end)
+      end)
+    end)
+  end
 
   defp generate_stream(type), do: IO.inspect(type)
+
+  defp generate_map_field({:type, _, :map_field_exact, [{_, _, key}, value]}) do
+    value = generate_stream(value)
+
+    StreamData.fixed_map(%{key => value})
+  end
+  defp generate_map_field({:type, _, :map_field_exact, [key, value]}) do
+    StreamData.map_of(
+      generate_stream(key),
+      generate_stream(value)
+    )
+    |> StreamData.filter(&(&1 != %{}))
+  end
+  defp generate_map_field({:type, _, :map_field_assoc, [key, value]}) do
+    StreamData.map_of(
+      generate_stream(key),
+      generate_stream(value)
+    )
+  end
 end

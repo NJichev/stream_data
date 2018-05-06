@@ -1193,7 +1193,7 @@ defmodule StreamData do
   ## Examples
 
       data = StreamData.fixed_map(%{
-        integer: StreamData.integer(),
+        int: StreamData.integer(),
         binary: StreamData.binary(),
       })
       Enum.take(data, 3)
@@ -1223,7 +1223,7 @@ defmodule StreamData do
   ## Examples
 
       data = StreamData.optional_map(%{
-        integer: StreamData.integer(),
+        int: StreamData.integer(),
         binary: StreamData.binary(),
       })
       Enum.take(data, 3)

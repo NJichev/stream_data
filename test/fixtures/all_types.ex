@@ -53,13 +53,14 @@ defmodule StreamDataTest.AllTypes do
   @type literal_keyword_list_fixed_key2() :: [{:key, integer()}]
   @type literal_keyword_list_type_key() :: [{binary(), integer()}]
   @type literal_empty_map() :: %{}
-  @type literal_map_with_key() :: %{key: integer()}
+  @type literal_map_with_key() :: %{:key => integer()}
   @type literal_map_with_required_key() :: %{required(bitstring()) => integer()}
   @type literal_map_with_optional_key() :: %{optional(bitstring()) => integer()}
+  @type literal_map_with_required_and_optional_key() :: %{:key => integer(), optional(bitstring()) => integer()}
   @type literal_struct_all_fields_any_type() :: %SomeStruct{}
   @type literal_struct_all_fields_key_type() :: %SomeStruct{key: integer()}
   @type literal_empty_tuple() :: {}
-  @type literal_2_element_tuple() :: {1, 2}
+  @type literal_2_element_tuple() :: {1, atom()}
 
   ## Built-in types
   @type builtin_term() :: term()
