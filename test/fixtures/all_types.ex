@@ -41,7 +41,7 @@ defmodule StreamDataTest.AllTypes do
   @type literal_empty_bitstring() :: <<>>
   @type literal_size_0() :: <<_::0>>
   @type literal_unit_1() :: <<_::_*1>>
-  @type literal_size_1_unit_8() :: <<_::100, _::_*256>>
+  @type literal_size_1_unit_8() :: <<_::1, _::_*8>>
   @type literal_function_arity_any() :: (... -> integer())
   @type literal_function_arity_0() :: (() -> integer())
   @type literal_function_arity_2() :: (integer(), atom() -> integer())

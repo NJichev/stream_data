@@ -39,7 +39,12 @@ defmodule StreamData.TypesTest do
   end
 
   test "struct"
-  test "tuple"
+
+  test "tuple" do
+    data = generate_data(:basic_tuple)
+
+    check all x <- data, max_runs: 25, do: assert is_tuple(x)
+  end
 
   # Numbers
   test "float" do
@@ -188,10 +193,108 @@ defmodule StreamData.TypesTest do
       data = generate_data(:literal_integers)
 
       check all x <- data do
+        assert is_integer(x)
         assert x >= 1
         assert x <= 10
       end
     end
+
+    test "bitstrings" do
+      data = generate_data(:literal_empty_bitstring)
+
+      check all x <- data do
+        assert x == ""
+      end
+    end
+
+    test "bitstrings with size 0" do
+      data = generate_data(:literal_size_0)
+
+      check all x <- data do
+        assert "" == x
+      end
+    end
+
+    test "bitstrings with unit 1" do
+      data = generate_data(:literal_unit_1)
+
+      check all x <- data do
+        assert x == ""
+      end
+    end
+
+    test "bitstrings with size 1 and unit 8" do
+      data = generate_data(:literal_size_1_unit_8)
+
+      check all x <- data do
+        assert <<_::1*8>> = x
+      end
+    end
+
+    test "list type" do
+      data = generate_data(:literal_list_type)
+
+      check all x <- data do
+        assert is_list(x)
+        assert Enum.all?(x, &is_integer(&1))
+      end
+    end
+
+    test "empty list" do
+      data = generate_data(:literal_empty_list)
+
+      check all x <- data do
+        assert x == []
+      end
+    end
+
+    test "nonempty list" do
+      data = generate_data(:literal_list_nonempty)
+
+      check all x <- data, max_runs: 25 do
+        assert is_list(x)
+        assert x != []
+      end
+    end
+
+    test "nonempty list with type" do
+      data = generate_data(:literal_nonempty_list_type)
+
+      check all x <- data, max_runs: 25 do
+        assert is_list(x)
+        assert x != []
+        assert Enum.all?(x, &is_atom(&1))
+      end
+    end
+
+    test "keyword list fixed key" do
+      data = generate_data(:literal_keyword_list_fixed_key)
+
+      check all x <- data do
+        for {:key, int} <- x, do: assert is_integer(int)
+        assert is_list(x)
+      end
+    end
+
+    test "keyword list fixed key variant 2" do
+      data = generate_data(:literal_keyword_list_fixed_key2)
+
+      check all x <- data do
+        assert is_list(x)
+        for {:key, int} <- x, do: assert is_integer(int)
+      end
+    end
+
+    test "keyword list with type as a key" do
+      data = generate_data(:literal_keyword_list_type_key)
+
+      check all x <- data do
+        assert is_list(x)
+        for {bin, int} <- x, do: assert is_integer(int) and is_binary(bin)
+      end
+    end
+
+    test "functions"
   end
 
   #TODO: Delete if merge types file and test file to stream_data.ex
