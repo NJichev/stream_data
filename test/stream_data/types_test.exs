@@ -592,6 +592,14 @@ defmodule StreamData.TypesTest do
     end
   end
 
+  test "when missinga a type" do
+    assert_raise(
+      ArgumentError,
+      "Module StreamDataTest.AllTypes does not define a type called does_not_exist.\n",
+      fn -> generate_data(:does_not_exist) end
+    )
+  end
+
   # TODO: Delete if whole file is moved to stream_data.ex
   defp each_improper_list([], _head_fun, _tail_fun) do
     :ok

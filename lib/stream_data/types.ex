@@ -1,25 +1,39 @@
 defmodule StreamData.Types do
   def generate(module, name) when is_atom(module) and is_atom(name) do
-    # Validate args
-    # TODO: Handle missing type
-    # TODO: Handle same name, different args
-    [type| _] = for x = {^name, _type} <- beam_types(module), do: x
+    type = for x = {^name, _type} <- beam_types(module), do: x
 
-    IO.inspect(type)
-    do_generate(type)
+    case type do
+      [t] ->
+        IO.inspect(t)
+        do_generate(t)
+
+      _ ->
+        msg = """
+        Module #{inspect(module)} does not define a type called #{name}.
+        """
+
+        raise ArgumentError, msg
+    end
   end
 
   # TODO: Use Code.Typespec when merged in elixir
   defp beam_types(module) do
-    # TODO: Warn missing .beam file/not compiled
     with {^module, beam, _file} <- :code.get_object_code(module),
          {:ok, {^module, [abstract_code: {:raw_abstract_v1, abstract_code}]}} <-
            :beam_lib.chunks(beam, [:abstract_code]) do
       for {:attribute, _line, :type, {name, type, _other}} <- abstract_code, do: {name, type}
+    else
+      _ ->
+        msg = """
+        Could not find .beam file for Module #{module}.
+        Are you sure you have passed in the correct module name?
+        """
+
+        raise ArgumentError, msg
     end
   end
 
-  #TODO: Handle unions/recursives here
+  # TODO: Handle unions/recursives here
   defp do_generate({name, type}) when is_atom(name) do
     generate_stream(type)
   end
@@ -86,6 +100,7 @@ defmodule StreamData.Types do
       StreamData.term()
     )
   end
+
   defp generate_stream({:type, _, :maybe_improper_list, [type1, type2]}) do
     StreamData.maybe_improper_list_of(
       generate_stream(type1),
@@ -107,6 +122,7 @@ defmodule StreamData.Types do
     )
     |> StreamData.nonempty()
   end
+
   defp generate_stream({:type, _, :nonempty_maybe_improper_list, [type1, type2]}) do
     StreamData.maybe_improper_list_of(
       generate_stream(type1),
@@ -208,7 +224,7 @@ defmodule StreamData.Types do
     |> StreamData.nonempty()
   end
 
-  #TODO: Take args
+  # TODO: Take args
   defp generate_stream({:remote_type, _, [{:atom, _, module}, {:atom, _, type}, []]}) do
     generate(module, type)
   end
