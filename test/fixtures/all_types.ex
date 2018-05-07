@@ -79,7 +79,7 @@ defmodule StreamDataTest.AllTypes do
   @type builtin_iodata() :: iodata()
   @type builtin_iolist() :: iolist()
   @type builtin_keyword() :: keyword()
-  @type builtin_keyword_value_type() :: keyword(:t)
+  @type builtin_keyword_value_type() :: keyword(integer())
   @type builtin_list() :: list()
   @type builtin_nonempty_list() :: nonempty_list()
   @type builtin_maybe_improper_list() :: maybe_improper_list()
@@ -95,4 +95,8 @@ defmodule StreamDataTest.AllTypes do
   ## Remote types
   @type remote_enum_t0() :: Enum.t()
   @type remote_keyword_t1() :: Keyword.t(integer())
+
+  ## Union types
+  @type atom_or_integer() :: integer() | atom()
+  @type my_list :: {term(), my_list()} | nil
 end

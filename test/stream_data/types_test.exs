@@ -10,9 +10,7 @@ defmodule StreamData.TypesTest do
     data = generate_data(:basic_any)
 
     check all term <- data, max_runs: 25 do
-      assert is_boolean(term) or is_integer(term) or is_float(term) or is_binary(term) or
-              is_atom(term) or is_reference(term) or is_list(term) or is_map(term) or
-              is_tuple(term)
+      assert is_term(term)
     end
   end
 
@@ -25,7 +23,7 @@ defmodule StreamData.TypesTest do
   test "atom" do
     data = generate_data(:basic_atom)
 
-    check all x <- data, do: assert is_atom(x)
+    check all x <- data, do: assert(is_atom(x))
   end
 
   test "map" do
@@ -42,12 +40,10 @@ defmodule StreamData.TypesTest do
   test "references" do
     data = generate_data(:basic_reference)
 
-    check all x <- data, do: assert is_reference(x)
+    check all x <- data, do: assert(is_reference(x))
   end
 
-  test "struct" do
-    data = generate_data(:basic_struct)
-  end
+  test "struct"
 
   test "tuple" do
     data = generate_data(:basic_tuple)
@@ -69,7 +65,7 @@ defmodule StreamData.TypesTest do
   test "integer" do
     data = generate_data(:basic_integer)
 
-    check all x <- data, do: assert is_integer(x)
+    check all x <- data, do: assert(is_integer(x))
   end
 
   test "neg_integer" do
@@ -106,7 +102,6 @@ defmodule StreamData.TypesTest do
 
       check all list <- data, max_runs: 25 do
         assert is_list(list)
-        assert length(list) >= 0
         assert Enum.all?(list, fn x -> is_integer(x) end)
       end
     end
@@ -116,10 +111,10 @@ defmodule StreamData.TypesTest do
 
       check all list <- data, max_runs: 25 do
         assert is_list(list)
-        assert length(list) >= 0
+
         assert Enum.all?(list, fn x ->
-          is_list(x) and Enum.all?(x, &is_integer(&1))
-        end)
+                 is_list(x) and Enum.all?(x, &is_integer(&1))
+               end)
       end
     end
   end
@@ -141,9 +136,10 @@ defmodule StreamData.TypesTest do
       check all list <- data, max_runs: 25 do
         assert is_list(list)
         assert length(list) > 0
+
         assert Enum.all?(list, fn x ->
-          is_list(x) and Enum.all?(x, &is_integer(&1))
-        end)
+                 is_list(x) and Enum.all?(x, &is_integer(&1))
+               end)
       end
     end
   end
@@ -205,8 +201,7 @@ defmodule StreamData.TypesTest do
 
       check all x <- data do
         assert is_integer(x)
-        assert x >= 1
-        assert x <= 10
+        assert x in 0..10
       end
     end
 
@@ -284,7 +279,7 @@ defmodule StreamData.TypesTest do
       data = generate_data(:literal_keyword_list_fixed_key)
 
       check all x <- data do
-        for {:key, int} <- x, do: assert is_integer(int)
+        for {:key, int} <- x, do: assert(is_integer(int))
         assert is_list(x)
       end
     end
@@ -294,7 +289,7 @@ defmodule StreamData.TypesTest do
 
       check all x <- data do
         assert is_list(x)
-        for {:key, int} <- x, do: assert is_integer(int)
+        for {:key, int} <- x, do: assert(is_integer(int))
       end
     end
 
@@ -303,7 +298,7 @@ defmodule StreamData.TypesTest do
 
       check all x <- data do
         assert is_list(x)
-        for {bin, int} <- x, do: assert is_integer(int) and is_binary(bin)
+        for {bin, int} <- x, do: assert(is_integer(int) and is_binary(bin))
       end
     end
 
@@ -367,7 +362,8 @@ defmodule StreamData.TypesTest do
       data = generate_data(:literal_struct_all_fields_any_type)
 
       check all x <- data, max_runs: 25 do
-        assert %StreamDataTest.AllTypes.SomeStruct{key: _value} = x
+        assert %StreamDataTest.AllTypes.SomeStruct{key: value} = x
+        assert is_term(value)
       end
     end
 
@@ -383,17 +379,220 @@ defmodule StreamData.TypesTest do
     test "empty tuple" do
       data = generate_data(:literal_empty_tuple)
 
-      check all x <- data, do: assert x == {}
+      check all x <- data, do: assert(x == {})
     end
 
     test "2 element tuple with fixed and random type" do
       data = generate_data(:literal_2_element_tuple)
 
-      check all {1, x} <- data, do: assert is_atom(x)
+      check all {1, x} <- data, do: assert(is_atom(x))
     end
   end
 
-  #TODO: Delete if whole file is moved to stream_data.ex
+  describe "builtin types" do
+    test "term" do
+      data = generate_data(:builtin_term)
+
+      check all term <- data, max_runs: 25 do
+        is_term(term)
+      end
+    end
+
+    test "arity" do
+      data = generate_data(:builtin_arity)
+
+      check all x <- data do
+        assert is_integer(x)
+        assert x in 0..255
+      end
+    end
+
+    test "as_boolean"
+
+    test "binary" do
+      data = generate_data(:builtin_binary)
+
+      check all x <- data, do: assert(is_binary(x))
+    end
+
+    test "bitstring" do
+      data = generate_data(:builtin_bitstring)
+
+      check all x <- data, do: assert(is_bitstring(x))
+    end
+
+    test "boolean" do
+      data = generate_data(:builtin_boolean)
+
+      check all x <- data, do: assert(is_boolean(x))
+    end
+
+    test "byte" do
+      data = generate_data(:builtin_byte)
+
+      check all x <- data do
+        assert is_integer(x)
+        assert x in 0..255
+      end
+    end
+
+    test "char" do
+      data = generate_data(:builtin_char)
+
+      check all x <- data do
+        assert is_integer(x)
+        assert x in 0..0x10FFFF
+      end
+    end
+
+    test "charlist" do
+      data = generate_data(:builtin_charlist)
+
+      check all x <- data do
+        assert is_list(x)
+
+        assert Enum.all?(x, &(&1 in 0..0x10FFFF))
+      end
+    end
+
+    test "nonempty charlist" do
+      data = generate_data(:builtin_nonempty_charlist)
+
+      check all x <- data do
+        assert is_list(x)
+        assert x != []
+
+        assert Enum.all?(x, &(&1 in 0..0x10FFFF))
+      end
+    end
+
+    test "fun"
+    test "function"
+
+    test "identifier" # Depends on ports/pids/reference
+
+    test "iolist" do
+      data = generate_data(:builtin_iolist)
+
+      check all x <- data do
+        assert is_iolist(x)
+      end
+    end
+
+    test "iodata" do
+      data = generate_data(:builtin_iodata)
+
+      check all x <- data do
+        assert is_binary(x) or is_iolist(x)
+      end
+    end
+
+    test "keyword" do
+      data = generate_data(:builtin_keyword)
+
+      check all x <- data, max_runs: 25 do
+        assert is_list(x)
+        Enum.each(x, fn {k, v} ->
+          assert is_atom(k)
+          assert is_term(v)
+        end)
+      end
+    end
+
+    #TODO:parameterized types - there is not cool support for list and map
+    test "parameterized keyword" do
+      data = generate_data(:builtin_keyword_value_type)
+
+      check all x <- data, max_runs: 25 do
+        assert is_list(x)
+        Enum.each(x, fn {k, v} ->
+          assert is_atom(k)
+          assert is_integer(v)
+        end)
+      end
+    end
+
+    test "list" do
+      data = generate_data(:builtin_list)
+
+      check all x <- data, max_runs: 25 do
+        assert is_list(x)
+      end
+    end
+
+    test "nonempty_list" do
+      data = generate_data(:builtin_nonempty_list)
+
+      check all x <- data, max_runs: 25 do
+        assert is_list(x)
+        assert x != []
+      end
+    end
+
+    test "maybe_improper_list" do
+      data = generate_data(:builtin_maybe_improper_list)
+
+      check all list <- data, max_runs: 25 do
+        each_improper_list(list, &assert(is_term(&1)), &assert(is_term(&1)))
+      end
+    end
+
+    test "nonempty_maybe_improper_list" do
+      data = generate_data(:builtin_nonempty_maybe_improper_list)
+
+      check all list <- data, max_runs: 25 do
+        assert list != []
+        each_improper_list(list, &assert(is_term(&1)), &assert(is_term(&1)))
+      end
+    end
+
+    test "mfa" do
+      data = generate_data(:builtin_mfa)
+
+      check all {module, function, arity} <- data, max_runs: 25 do
+        assert is_atom(module)
+        assert is_atom(function)
+        assert is_integer(arity)
+        assert arity in 0..255
+      end
+    end
+
+    test "module" do
+      data = generate_data(:builtin_module)
+
+      check all x <- data, do: assert is_atom(x)
+    end
+
+    test "no_return" do
+      assert_raise(ArgumentError, fn ->
+        generate_data(:builtin_no_return)
+      end)
+    end
+
+    test "node" do
+      data = generate_data(:builtin_node)
+
+      check all x <- data, do: assert is_atom(x)
+    end
+
+    test "number" do
+      data = generate_data(:builtin_number)
+
+      check all x <- data, do: assert is_number(x)
+    end
+
+    test "struct"
+
+    test "timeout" do
+      data = generate_data(:builtin_timeout)
+
+      check all x <- data do
+        assert x == :infinity or is_integer(x)
+      end
+    end
+  end
+
+  # TODO: Delete if whole file is moved to stream_data.ex
   defp each_improper_list([], _head_fun, _tail_fun) do
     :ok
   end
@@ -415,4 +614,22 @@ defmodule StreamData.TypesTest do
   defp generate_data(name) do
     Types.generate(AllTypes, name)
   end
+
+  defp is_term(t) do
+    # Will something ever be false here?
+    is_boolean(t) or is_integer(t) or is_float(t) or is_binary(t) or is_atom(t) or is_reference(t) or
+      is_list(t) or is_map(t) or is_tuple(t)
+  end
+
+  defp is_iolist([]), do: true
+  defp is_iolist(x) when is_binary(x), do: true
+  defp is_iolist([x|xs]) when x in 0..255, do: is_iolist(xs)
+  defp is_iolist([x|xs]) when is_binary(x), do: is_iolist(xs)
+  defp is_iolist([x|xs]) do
+    case is_iolist(x) do
+      true -> is_iolist(xs)
+      _ -> false
+    end
+  end
+  defp is_iolist(_), do: false
 end
