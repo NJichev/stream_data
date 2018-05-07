@@ -592,11 +592,24 @@ defmodule StreamData.TypesTest do
     end
   end
 
-  test "when missinga a type" do
+  test "when missing a type" do
     assert_raise(
       ArgumentError,
       "Module StreamDataTest.AllTypes does not define a type called does_not_exist.\n",
       fn -> generate_data(:does_not_exist) end
+    )
+  end
+
+  test "when missing a module" do
+    assert_raise(
+      ArgumentError,
+      """
+      Could not find .beam file for Module DoesNotExist.
+      Are you sure you have passed in the correct module name?
+      """,
+      fn ->
+        generate(DoesNotExist, :some_type)
+      end
     )
   end
 
@@ -620,7 +633,11 @@ defmodule StreamData.TypesTest do
   end
 
   defp generate_data(name) do
-    Types.generate(AllTypes, name)
+    generate(AllTypes, name)
+  end
+
+  defp generate(module, name) do
+    Types.generate(module, name)
   end
 
   defp is_term(t) do

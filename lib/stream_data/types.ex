@@ -25,7 +25,7 @@ defmodule StreamData.Types do
     else
       _ ->
         msg = """
-        Could not find .beam file for Module #{module}.
+        Could not find .beam file for Module #{inspect(module)}.
         Are you sure you have passed in the correct module name?
         """
 
