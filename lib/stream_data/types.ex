@@ -1,4 +1,6 @@
 defmodule StreamData.Types do
+  import StreamData
+
   def generate(module, name) when is_atom(module) and is_atom(name) do
     type = for x = {^name, _type} <- beam_types(module), do: x
 
@@ -39,35 +41,35 @@ defmodule StreamData.Types do
   end
 
   defp generate_stream({:type, _, :integer, _}) do
-    StreamData.integer()
+    integer()
   end
 
   defp generate_stream({:type, _, :atom, _}) do
-    StreamData.atom(:alphanumeric)
+    atom(:alphanumeric)
   end
 
   defp generate_stream({:type, _, :neg_integer, _}) do
-    StreamData.negative_integer()
+    negative_integer()
   end
 
   defp generate_stream({:type, _, :pos_integer, _}) do
-    StreamData.positive_integer()
+    positive_integer()
   end
 
   defp generate_stream({:type, _, :non_neg_integer, _}) do
-    StreamData.non_negative_integer()
+    non_negative_integer()
   end
 
   defp generate_stream({:type, _, :float, _}) do
-    StreamData.float()
+    float()
   end
 
   defp generate_stream({:type, _, :reference, _}) do
-    StreamData.reference()
+    reference()
   end
 
   defp generate_stream({:type, _, type, _}) when type in [:any, :term] do
-    StreamData.term()
+    term()
   end
 
   defp generate_stream({:type, _, bottom, _}) when bottom in [:none, :no_return] do
@@ -79,117 +81,117 @@ defmodule StreamData.Types do
   end
 
   defp generate_stream({:type, _, :list, []}) do
-    StreamData.term()
-    |> StreamData.list_of()
+    term()
+    |> list_of()
   end
 
   defp generate_stream({:type, _, :list, [type]}) do
     generate_stream(type)
-    |> StreamData.list_of()
+    |> list_of()
   end
 
   defp generate_stream({:type, _, :nonempty_list, [type]}) do
     generate_stream(type)
-    |> StreamData.list_of()
-    |> StreamData.nonempty()
+    |> list_of()
+    |> nonempty()
   end
 
   defp generate_stream({:type, _, :maybe_improper_list, []}) do
-    StreamData.maybe_improper_list_of(
-      StreamData.term(),
-      StreamData.term()
+    maybe_improper_list_of(
+      term(),
+      term()
     )
   end
 
   defp generate_stream({:type, _, :maybe_improper_list, [type1, type2]}) do
-    StreamData.maybe_improper_list_of(
+    maybe_improper_list_of(
       generate_stream(type1),
       generate_stream(type2)
     )
   end
 
   defp generate_stream({:type, _, :nonempty_improper_list, [type1, type2]}) do
-    StreamData.nonempty_improper_list_of(
+    nonempty_improper_list_of(
       generate_stream(type1),
       generate_stream(type2)
     )
   end
 
   defp generate_stream({:type, _, :nonempty_maybe_improper_list, []}) do
-    StreamData.maybe_improper_list_of(
-      StreamData.term(),
-      StreamData.term()
+    maybe_improper_list_of(
+      term(),
+      term()
     )
-    |> StreamData.nonempty()
+    |> nonempty()
   end
 
   defp generate_stream({:type, _, :nonempty_maybe_improper_list, [type1, type2]}) do
-    StreamData.maybe_improper_list_of(
+    maybe_improper_list_of(
       generate_stream(type1),
       generate_stream(type2)
     )
-    |> StreamData.nonempty()
+    |> nonempty()
   end
 
   # Literals
   defp generate_stream({type, _, literal}) when type in [:atom, :integer] do
-    StreamData.constant(literal)
+    constant(literal)
   end
 
   defp generate_stream({:type, _, :range, [{:integer, _, lower}, {:integer, _, upper}]}) do
-    StreamData.integer(lower..upper)
+    integer(lower..upper)
   end
 
   defp generate_stream({:type, _, :binary, [{:integer, _, size}, {:integer, _, unit}]}) do
     # Not sure this is right
-    StreamData.bitstring(length: size * unit)
+    bitstring(length: size * unit)
   end
 
   defp generate_stream({:type, _, :bitstring, []}) do
-    StreamData.bitstring()
+    bitstring()
   end
 
-  defp generate_stream({:type, _, nil, []}), do: StreamData.constant([])
+  defp generate_stream({:type, _, nil, []}), do: constant([])
 
   defp generate_stream({:type, _, :nonempty_list, []}) do
-    StreamData.term()
-    |> StreamData.list_of()
-    |> StreamData.nonempty()
+    term()
+    |> list_of()
+    |> nonempty()
   end
 
   defp generate_stream({:type, _, :tuple, :any}) do
-    StreamData.term()
-    |> StreamData.list_of()
-    |> StreamData.map(&List.to_tuple/1)
+    term()
+    |> list_of()
+    |> map(&List.to_tuple/1)
   end
 
   defp generate_stream({:type, _, :tuple, types}) do
     types
     |> Enum.map(&generate_stream/1)
     |> List.to_tuple()
-    |> StreamData.tuple()
+    |> tuple()
   end
 
   defp generate_stream({:type, _, :binary, []}) do
-    StreamData.binary()
+    binary()
   end
 
   defp generate_stream({:type, _, :map, :any}) do
-    StreamData.map_of(StreamData.term(), StreamData.term())
+    map_of(term(), term())
   end
 
   defp generate_stream({:type, _, :map, []}) do
-    StreamData.constant(%{})
+    constant(%{})
   end
 
   defp generate_stream({:type, _, :map, field_types}) do
     field_types
     |> Enum.map(&generate_map_field/1)
     |> Enum.reduce(fn x, acc ->
-      StreamData.bind(acc, fn map1 ->
-        StreamData.bind(x, fn map2 ->
+      bind(acc, fn map1 ->
+        bind(x, fn map2 ->
           Map.merge(map2, map1)
-          |> StreamData.constant()
+          |> constant()
         end)
       end)
     end)
@@ -197,15 +199,15 @@ defmodule StreamData.Types do
 
   # Built-in types
   defp generate_stream({:type, _, :arity, []}) do
-    StreamData.integer(0..255)
+    integer(0..255)
   end
 
   defp generate_stream({:type, _, :boolean, []}) do
-    StreamData.boolean()
+    boolean()
   end
 
   defp generate_stream({:type, _, :byte, []}) do
-    StreamData.byte()
+    byte()
   end
 
   defp generate_stream({:type, _, :char, []}) do
@@ -215,13 +217,13 @@ defmodule StreamData.Types do
   # Note: This is the type we call charlist()
   defp generate_stream({:type, _, :string, []}) do
     char()
-    |> StreamData.list_of()
+    |> list_of()
   end
 
   defp generate_stream({:type, _, :nonempty_string, []}) do
     char()
-    |> StreamData.list_of()
-    |> StreamData.nonempty()
+    |> list_of()
+    |> nonempty()
   end
 
   # TODO: Take args
@@ -230,42 +232,42 @@ defmodule StreamData.Types do
   end
 
   defp generate_stream({:type, _, :iolist, []}) do
-    StreamData.iolist()
+    iolist()
   end
 
   defp generate_stream({:type, _, :iodata, []}) do
-    StreamData.iodata()
+    iodata()
   end
 
   defp generate_stream({:type, _, :mfa, []}) do
-    module = StreamData.atom(:alphanumeric)
-    function = StreamData.atom(:alphanumeric)
-    arity = StreamData.integer(0..255)
+    module = atom(:alphanumeric)
+    function = atom(:alphanumeric)
+    arity = integer(0..255)
 
-    StreamData.bind(module, fn m ->
-      StreamData.bind(function, fn f ->
-        StreamData.bind(arity, fn a ->
-          StreamData.constant({m, f, a})
+    bind(module, fn m ->
+      bind(function, fn f ->
+        bind(arity, fn a ->
+          constant({m, f, a})
         end)
       end)
     end)
   end
 
   defp generate_stream({:type, _, x, []}) when x in [:module, :node] do
-    StreamData.atom(:alphanumeric)
+    atom(:alphanumeric)
   end
 
   defp generate_stream({:type, _, :number, []}) do
-    StreamData.one_of([
-      StreamData.integer(),
-      StreamData.float()
+    one_of([
+      integer(),
+      float()
     ])
   end
 
   defp generate_stream({:type, _, :timeout, []}) do
-    StreamData.one_of([
-      StreamData.integer(),
-      StreamData.constant(:infinity)
+    one_of([
+      integer(),
+      constant(:infinity)
     ])
   end
 
@@ -275,25 +277,25 @@ defmodule StreamData.Types do
   defp generate_map_field({:type, _, :map_field_exact, [{_, _, key}, value]}) do
     value = generate_stream(value)
 
-    StreamData.fixed_map(%{key => value})
+    fixed_map(%{key => value})
   end
 
   defp generate_map_field({:type, _, :map_field_exact, [key, value]}) do
-    StreamData.map_of(
+    map_of(
       generate_stream(key),
       generate_stream(value)
     )
-    |> StreamData.filter(&(&1 != %{}))
+    |> filter(&(&1 != %{}))
   end
 
   defp generate_map_field({:type, _, :map_field_assoc, [key, value]}) do
-    StreamData.map_of(
+    map_of(
       generate_stream(key),
       generate_stream(value)
     )
   end
 
   defp char() do
-    StreamData.integer(0..0x10FFFF)
+    integer(0..0x10FFFF)
   end
 end
