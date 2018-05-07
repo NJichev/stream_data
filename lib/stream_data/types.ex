@@ -209,17 +209,17 @@ defmodule StreamData.Types do
   end
 
   defp generate_stream({:type, _, :char, []}) do
-    StreamData.char()
+    char()
   end
 
   # Note: This is the type we call charlist()
   defp generate_stream({:type, _, :string, []}) do
-    StreamData.char()
+    char()
     |> StreamData.list_of()
   end
 
   defp generate_stream({:type, _, :nonempty_string, []}) do
-    StreamData.char()
+    char()
     |> StreamData.list_of()
     |> StreamData.nonempty()
   end
@@ -291,5 +291,9 @@ defmodule StreamData.Types do
       generate_stream(key),
       generate_stream(value)
     )
+  end
+
+  defp char() do
+    StreamData.integer(0..0x10FFFF)
   end
 end
