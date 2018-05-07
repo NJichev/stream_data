@@ -15,9 +15,11 @@ defmodule StreamData.TypesTest do
   end
 
   test "none" do
-    assert_raise(ArgumentError, fn ->
-      generate_data(:basic_none)
-    end)
+    assert_raise(
+      ArgumentError,
+      "Cannot generate types of type bottom.\n",
+      fn -> generate_data(:basic_none) end
+    )
   end
 
   test "atom" do
@@ -564,9 +566,11 @@ defmodule StreamData.TypesTest do
     end
 
     test "no_return" do
-      assert_raise(ArgumentError, fn ->
-        generate_data(:builtin_no_return)
-      end)
+      assert_raise(
+        ArgumentError,
+        "Cannot generate types of type bottom.\n",
+        fn -> generate_data(:builtin_no_return) end
+      )
     end
 
     test "node" do

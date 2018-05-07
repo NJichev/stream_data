@@ -72,7 +72,7 @@ defmodule StreamData.Types do
 
   defp generate_stream({:type, _, bottom, _}) when bottom in [:none, :no_return] do
     msg = """
-    Can't generate the bottom type.
+    Cannot generate types of type bottom.
     """
 
     raise ArgumentError, msg
