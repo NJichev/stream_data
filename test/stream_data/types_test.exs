@@ -617,10 +617,55 @@ defmodule StreamData.TypesTest do
     )
   end
 
-  # TODO: Delete if whole file is moved to stream_data.ex
-  defp each_improper_list([], _head_fun, _tail_fun) do
-    :ok
+  test "remote types" do
+    data = generate_data(:remote_enum_t0)
+
+    check all x <- data do
+      Enum.each(x, &(&1))
+    end
   end
+
+  test "parameterized remote types" do
+    data = generate_data(:remote_keyword_t1)
+
+    check all x <- data do
+      assert is_list(x)
+      Enum.each(x, fn {a, i} ->
+        assert is_atom(a)
+        assert is_integer(i)
+      end)
+    end
+  end
+
+  describe "union" do
+    test "basic union" do
+      data = generate_data(:union_atom_or_integer)
+
+      check all x <- data do
+        assert is_integer(x) or is_atom(x)
+      end
+    end
+
+    test "union any" do
+      data = generate_data(:union_any)
+
+      check all x <- data, max_runs: 25 do
+        assert is_term(x)
+      end
+    end
+  end
+
+  describe "recursive types" do
+    test "list" do
+      data = generate_data(:recursive_list)
+
+      check all x <- data, max_runs: 25 do
+        assert is_union_list(x)
+      end
+    end
+  end
+
+  defp each_improper_list([], _head_fun, _tail_fun), do: :ok
 
   defp each_improper_list([elem], _head_fun, tail_fun) do
     tail_fun.(elem)
@@ -645,10 +690,15 @@ defmodule StreamData.TypesTest do
   end
 
   defp is_term(t) do
-    # Will something ever be false here?
     is_boolean(t) or is_integer(t) or is_float(t) or is_binary(t) or is_atom(t) or is_reference(t) or
       is_list(t) or is_map(t) or is_tuple(t)
   end
+
+  defp is_union_list(nil), do: true
+  defp is_union_list({t, list}) do
+    is_integer(t) and is_union_list(list)
+  end
+  defp is_union_list(_), do: false
 
   defp is_iolist([]), do: true
   defp is_iolist(x) when is_binary(x), do: true

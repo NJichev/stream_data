@@ -1,17 +1,34 @@
 defmodule StreamData.Types do
   import StreamData
 
-  def generate(module, name) when is_atom(module) and is_atom(name) do
+  @doc """
+  TODO
+  """
+  def generate(module, name, args \\ [])
+
+  def generate(module, name, args) when is_atom(module) and is_atom(name) and is_list(args) do
     type = for x = {^name, _type} <- beam_types(module), do: x
 
+    # pick correct type, when multiple
+    # Validate outer is list/map/tuple when having args
+    # Convert args
+    # put args in type tuple
     case type do
-      [t] ->
-        IO.inspect(t)
-        do_generate(t)
-
-      _ ->
+      [] ->
         msg = """
         Module #{inspect(module)} does not define a type called #{name}.
+        """
+
+        raise ArgumentError, msg
+
+      types when is_list(types) ->
+        pick_type(types, args)
+        |> do_generate(args)
+
+      _ ->
+        # Is this even okay?
+        msg = """
+        Unknown error.
         """
 
         raise ArgumentError, msg
@@ -35,10 +52,65 @@ defmodule StreamData.Types do
     end
   end
 
-  # TODO: Handle unions/recursives here
-  defp do_generate({name, type}) when is_atom(name) do
-    generate_stream(type)
+  defp pick_type(types, args) do
+    len = length(args)
+    res = for {name, t} = type <- types, vars(t) == len, do: type
+
+    case res do
+      [t] ->
+        t
+
+      _ ->
+        raise ArgumentError, "Not enough arguments passed"
+    end
   end
+
+  defp vars({:var, _, _}), do: 1
+
+  defp vars({:type, _, _, types}) do
+    vars(types)
+  end
+
+  defp vars(types) when is_list(types) do
+    types
+    |> Enum.map(&vars(&1))
+    |> Enum.sum()
+  end
+
+  defp vars(_), do: 0
+
+  # TODO: Handle unions/recursives here
+  defp do_generate({name, type}, args) when is_atom(name) do
+    put_args(type, args)
+    |> IO.inspect()
+    |> generate_stream()
+  end
+
+  defp put_args({:type, line, name, args_with_var}, args) do
+    {res, []} = replace_var(args_with_var, args)
+    {:type, line, name, res}
+  end
+
+  defp put_args(type, _args), do: type
+
+  # There has to be a better way.
+  def replace_var([{:type, line, name, types} | tail], args) do
+    {x, rest_args} = replace_var(types, args)
+    {result, rest_args} = replace_var(tail, rest_args)
+    {[{:type, line, name, x} | result], rest_args}
+  end
+
+  def replace_var([{:var, _, _} | tail1], [type | tail2]) do
+    {result, r} = replace_var(tail1, tail2)
+    {[type | result], r}
+  end
+
+  def replace_var([t | tail], args) do
+    {res, r} = replace_var(tail, args)
+    {[t | res], r}
+  end
+
+  def replace_var(l, a), do: {l, a}
 
   defp generate_stream({:type, _, :integer, _}) do
     integer()
@@ -227,8 +299,8 @@ defmodule StreamData.Types do
   end
 
   # TODO: Take args
-  defp generate_stream({:remote_type, _, [{:atom, _, module}, {:atom, _, type}, []]}) do
-    generate(module, type)
+  defp generate_stream({:remote_type, _, [{:atom, _, module}, {:atom, _, type}, args]}) do
+    generate(module, type, args)
   end
 
   defp generate_stream({:type, _, :iolist, []}) do
@@ -269,6 +341,13 @@ defmodule StreamData.Types do
       integer(),
       constant(:infinity)
     ])
+  end
+
+  # Unions
+  defp generate_stream({:type, _, :union, types}) do
+    types
+    |> Enum.map(&generate_stream(&1))
+    |> one_of
   end
 
   defp generate_stream(type), do: IO.inspect(type)

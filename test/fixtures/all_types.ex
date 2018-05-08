@@ -97,6 +97,9 @@ defmodule StreamDataTest.AllTypes do
   @type remote_keyword_t1() :: Keyword.t(integer())
 
   ## Union types
-  @type atom_or_integer() :: integer() | atom()
-  @type my_list :: {term(), my_list()} | nil
+  @type union_atom_or_integer() :: integer() | atom()
+  @type union_any() :: boolean() | number() | atom() | reference() | list() | map() | tuple()
+
+  ## Recursive types
+  @type recursive_list :: {term(), recursive_list()} | nil
 end
