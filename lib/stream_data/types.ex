@@ -2,7 +2,6 @@ defmodule StreamData.Types do
   import StreamData
 
   @doc """
-  TODO
   """
   def generate(module, name, args \\ [])
 
@@ -290,7 +289,6 @@ defmodule StreamData.Types do
     |> nonempty()
   end
 
-  # TODO: Take args
   defp generate_stream({:remote_type, _, [{:atom, _, module}, {:atom, _, type}, args]}) do
     generate(module, type, args)
   end

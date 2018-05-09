@@ -102,4 +102,5 @@ defmodule StreamDataTest.AllTypes do
 
   ## Recursive types
   @type recursive_list :: {term(), recursive_list()} | nil
+  @type recursive_list(a) :: {a, recursive_list(a)} | nil
 end

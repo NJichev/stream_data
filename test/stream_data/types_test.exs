@@ -501,7 +501,6 @@ defmodule StreamData.TypesTest do
       end
     end
 
-    #TODO:parameterized types - there is not cool support for list and map
     test "parameterized keyword" do
       data = generate_data(:builtin_keyword_value_type)
 
@@ -657,8 +656,6 @@ defmodule StreamData.TypesTest do
 
   describe "recursive types" do
     test "list" do
-      data = generate_data(:recursive_list)
-
       check all x <- data, max_runs: 25 do
         assert is_union_list(x)
       end
@@ -681,12 +678,12 @@ defmodule StreamData.TypesTest do
     end
   end
 
-  defp generate_data(name) do
-    generate(AllTypes, name)
+  defp generate_data(name, args \\ []) do
+    generate(AllTypes, name, args)
   end
 
-  defp generate(module, name) do
-    Types.generate(module, name)
+  defp generate(module, name, args \\ []) do
+    Types.generate(module, name, args)
   end
 
   defp is_term(t) do
