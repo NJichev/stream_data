@@ -24,14 +24,6 @@ defmodule StreamData.Types do
       types when is_list(types) ->
         pick_type(types, args)
         |> do_generate(args)
-
-      _ ->
-        # Is this even okay?
-        msg = """
-        Unknown error.
-        """
-
-        raise ArgumentError, msg
     end
   end
 
@@ -54,7 +46,7 @@ defmodule StreamData.Types do
 
   defp pick_type(types, args) do
     len = length(args)
-    res = for {name, t} = type <- types, vars(t) == len, do: type
+    res = for {_name, t} = type <- types, vars(t) == len, do: type
 
     case res do
       [t] ->
