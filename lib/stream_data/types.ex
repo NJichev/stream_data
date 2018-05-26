@@ -3,6 +3,7 @@ defmodule StreamData.Types do
 
   @doc """
   """
+  @spec generate(module(), atom(), [atom()]) :: StreamData.t(any())
   def generate(module, name, args \\ [])
 
   def generate(module, name, args) when is_atom(module) and is_atom(name) and is_list(args) do
@@ -22,7 +23,7 @@ defmodule StreamData.Types do
 
       types when is_list(types) ->
         pick_type(types, args)
-        |> do_generate(args)
+        |> do_generate(module, args)
     end
   end
 
@@ -42,6 +43,19 @@ defmodule StreamData.Types do
         raise ArgumentError, msg
     end
   end
+
+  defp rename({:type, line, name, args}, module) do
+    new = rename(args, module)
+    {:type, line, name, new}
+  end
+  defp rename({:user_type, _, name, args}, module) do
+    {:user_type, module, name, rename(args, module)}
+  end
+  defp rename([], _module), do: []
+  defp rename([x|xs], module) do
+    [rename(x, module)|rename(xs, module)]
+  end
+  defp rename(type, _module), do: type
 
   defp pick_type(types, args) do
     len = length(args)
@@ -71,8 +85,9 @@ defmodule StreamData.Types do
   defp vars(_), do: 0
 
   # TODO: Handle unions/recursives here
-  defp do_generate({name, type}, args) when is_atom(name) do
+  defp do_generate({name, type}, module, args) when is_atom(name) do
     put_args(type, args)
+    |> rename(module)
     |> IO.inspect()
     |> generate_stream()
   end
@@ -206,7 +221,6 @@ defmodule StreamData.Types do
   end
 
   defp generate_stream({:type, _, :binary, [{:integer, _, size}, {:integer, _, unit}]}) do
-    # Not sure this is right
     bitstring(length: size * unit)
   end
 
@@ -333,11 +347,14 @@ defmodule StreamData.Types do
     ])
   end
 
-  # Unions
   defp generate_stream({:type, _, :union, types}) do
-    types
-    |> Enum.map(&generate_stream(&1))
-    |> one_of
+    IO.inspect(types)
+    #gather leafs => leaf generators
+    #gather nodes => value generators
+    #gather recursive holder
+    tree(constant(nil), fn child_gen ->
+      {integer(), child_gen}
+    end)
   end
 
   defp generate_stream(type), do: IO.inspect(type)
